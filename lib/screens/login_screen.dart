@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // ⚠️ GANTI DENGAN IP ADDRESS LAPTOP KAMU (Hasil ipconfig di CMD)
-  final String baseUrl = 'http://192.168.7.65:8000/api';
+  final String baseUrl = 'http://192.168.3.77:8000/api';
 
   Future<void> _login() async {
     setState(() {
