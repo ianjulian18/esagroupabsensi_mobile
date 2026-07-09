@@ -128,8 +128,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: item['status'] == 'hadir'
-                                    ? Colors.green.withOpacity(0.2)
-                                    : Colors.redAccent.withOpacity(0.2),
+                                    ? Colors.green.withValues(alpha: 0.2)
+                                    : Colors.redAccent.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -204,10 +204,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.blueAccent.withOpacity(0.1),
+                                color: Colors.blueAccent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Colors.blueAccent.withOpacity(0.3),
+                                  color: Colors.blueAccent.withValues(
+                                    alpha: 0.3,
+                                  ),
                                 ),
                               ),
                               child: Column(
@@ -267,7 +269,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ],
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ],
                     ),

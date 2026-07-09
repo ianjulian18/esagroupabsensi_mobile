@@ -1,0 +1,5 @@
+{
+    "require": {
+        "pxlrbt/filament-excel": "^3.6"
+    }
+}

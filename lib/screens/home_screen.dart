@@ -5,6 +5,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'history_screen.dart';
+import 'leave_request_screen.dart';
+import 'extra_hour_screen.dart';
+import 'bap_screen.dart';
+import 'payslip_screen.dart';
+import 'visit_log_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String token;
@@ -89,8 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever)
+          permission == LocationPermission.deniedForever) {
         return;
+      }
     }
 
     const LocationSettings locationSettings = LocationSettings(
@@ -135,11 +141,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _isFetchingLocation = false;
       });
     } else {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isFetchingLocation = false;
           _statusMessage = 'Gagal mengunci sinyal GPS.';
         });
+      }
     }
   }
 
@@ -457,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   _isLoading ? 'MEMPROSES...' : label,
                   style: TextStyle(
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                     letterSpacing: 1.2,
@@ -473,8 +480,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           setState(() {
                             _sliderPosition += details.delta.dx;
                             if (_sliderPosition < 0) _sliderPosition = 0;
-                            if (_sliderPosition > maxDragDistance)
+                            if (_sliderPosition > maxDragDistance) {
                               _sliderPosition = maxDragDistance;
+                            }
                           });
                         },
                   onHorizontalDragEnd: _isLoading
@@ -494,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: color.withOpacity(0.4),
+                          color: color.withValues(alpha: 0.4),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -542,8 +550,60 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.amber,
         elevation: 0,
         actions: [
+          // --- TOMBOL SLIP GAJI (BARU) ---
+          IconButton(
+            icon: const Icon(Icons.receipt_long, color: Colors.black),
+            tooltip: 'Slip Gaji',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    PayslipScreen(token: widget.token, baseUrl: widget.baseUrl),
+              ),
+            ),
+          ),
+          // --- TOMBOL BAP (BARU) ---
+          IconButton(
+            icon: const Icon(Icons.post_add, color: Colors.black),
+            tooltip: 'Pengajuan BAP',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    BapScreen(token: widget.token, baseUrl: widget.baseUrl),
+              ),
+            ),
+          ),
+          // --- TOMBOL LEMBUR (BARU) ---
+          IconButton(
+            icon: const Icon(Icons.more_time, color: Colors.black),
+            tooltip: 'Klaim Lembur',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ExtraHourScreen(
+                  token: widget.token,
+                  baseUrl: widget.baseUrl,
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_calendar, color: Colors.black),
+            tooltip: 'Pengajuan Cuti/Izin',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LeaveRequestScreen(
+                  token: widget.token,
+                  baseUrl: widget.baseUrl,
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.history, color: Colors.black),
+            tooltip: 'Riwayat Absensi',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -594,14 +654,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isInRadius
-                        ? Colors.green.withOpacity(0.5)
-                        : Colors.redAccent.withOpacity(0.5),
+                        ? Colors.green.withValues(alpha: 0.5)
+                        : Colors.redAccent.withValues(alpha: 0.5),
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: isInRadius
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.redAccent.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.redAccent.withValues(alpha: 0.1),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),
@@ -715,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.green),
                   ),
@@ -834,7 +894,48 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // --- TOMBOL BARU: ISI VISIT LOG ---
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(
+                          Icons.edit_document,
+                          color: Colors.amber,
+                        ),
+                        label: const Text(
+                          'Isi Laporan Visit (Visit Log)',
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.amber),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VisitLogScreen(
+                                token: widget.token,
+                                baseUrl: widget.baseUrl,
+                                storeName: _locationController
+                                    .text, // Otomatis mengirim nama toko
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 30),
+
+                    // ----------------------------------
                     _buildSlider(
                       label: 'GESER UNTUK VISIT OUT',
                       color: Colors.orangeAccent,
