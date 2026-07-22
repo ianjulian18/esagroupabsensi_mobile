@@ -43,7 +43,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190),
+              primary: Color(0xFFD32F2F),
               onPrimary: Colors.black,
               surface: Colors.white,
               onSurface: Colors.white,
@@ -136,7 +136,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke halaman utama (Home)
             },
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFFD32F2F))),
           ),
         ],
       ),
@@ -165,7 +165,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: const Color(0xFF2E3190)),
+            borderSide: const BorderSide(color: Color(0xFFD32F2F)),
           ),
         ),
       ),
@@ -181,7 +181,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
           'VISIT LOG',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: const Color(0xFF2E3190),
+        backgroundColor: const Color(0xFFD32F2F),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -254,7 +254,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
                     children: [
                       const Icon(
                         Icons.calendar_today,
-                        color: const Color(0xFF2E3190),
+                        color: Color(0xFFD32F2F),
                         size: 18,
                       ),
                       const SizedBox(width: 8),
@@ -281,7 +281,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E3190),
+                    backgroundColor: const Color(0xFFD32F2F),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

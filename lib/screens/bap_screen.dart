@@ -47,7 +47,7 @@ class _BapScreenState extends State<BapScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190),
+              primary: Color(0xFFD32F2F),
               onPrimary: Colors.black,
               surface: Colors.white,
               onSurface: Colors.white,
@@ -68,7 +68,7 @@ class _BapScreenState extends State<BapScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190),
+              primary: Color(0xFFD32F2F),
               onPrimary: Colors.black,
               surface: Colors.white,
               onSurface: Colors.white,
@@ -90,7 +90,10 @@ class _BapScreenState extends State<BapScreen> {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.photo_library, color: const Color(0xFF2E3190)),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFFD32F2F),
+                ),
                 title: const Text(
                   'Ambil dari Galeri',
                   style: TextStyle(color: Colors.white),
@@ -105,7 +108,10 @@ class _BapScreenState extends State<BapScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera, color: const Color(0xFF2E3190)),
+                leading: const Icon(
+                  Icons.photo_camera,
+                  color: Color(0xFFD32F2F),
+                ),
                 title: const Text(
                   'Buka Kamera',
                   style: TextStyle(color: Colors.white),
@@ -221,7 +227,7 @@ class _BapScreenState extends State<BapScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFFD32F2F))),
           ),
         ],
       ),
@@ -237,7 +243,7 @@ class _BapScreenState extends State<BapScreen> {
           'PENGAJUAN BAP',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: const Color(0xFF2E3190),
+        backgroundColor: const Color(0xFFD32F2F),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -264,7 +270,7 @@ class _BapScreenState extends State<BapScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
+                    borderSide: const BorderSide(color: Color(0xFFD32F2F)),
                   ),
                 ),
                 hint: const Text(
@@ -310,7 +316,7 @@ class _BapScreenState extends State<BapScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFFD32F2F),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -357,7 +363,7 @@ class _BapScreenState extends State<BapScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFFD32F2F),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -453,7 +459,7 @@ class _BapScreenState extends State<BapScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
+                    borderSide: const BorderSide(color: Color(0xFFD32F2F)),
                   ),
                 ),
               ),
@@ -463,7 +469,7 @@ class _BapScreenState extends State<BapScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E3190),
+                    backgroundColor: const Color(0xFFD32F2F),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

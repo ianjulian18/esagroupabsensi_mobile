@@ -7,11 +7,7 @@ class AddStoreScreen extends StatefulWidget {
   final String token;
   final String baseUrl;
 
-  const AddStoreScreen({
-    super.key,
-    required this.token,
-    required this.baseUrl,
-  });
+  const AddStoreScreen({super.key, required this.token, required this.baseUrl});
 
   @override
   State<AddStoreScreen> createState() => _AddStoreScreenState();
@@ -41,7 +37,7 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
         return;
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
       _showSnackBar('Location permissions are permanently denied');
       return;
@@ -54,8 +50,12 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
   }
 
   Future<void> _submitRequest() async {
-    if (_nameController.text.isEmpty || _addressController.text.isEmpty || _currentPosition == null) {
-      _showSnackBar('Lengkapi nama, alamat, dan pastikan lokasi sudah didapatkan!');
+    if (_nameController.text.isEmpty ||
+        _addressController.text.isEmpty ||
+        _currentPosition == null) {
+      _showSnackBar(
+        'Lengkapi nama, alamat, dan pastikan lokasi sudah didapatkan!',
+      );
       return;
     }
 
@@ -93,7 +93,7 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
   void _showSnackBar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent)
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -111,7 +111,7 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -123,7 +123,10 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('PENGAJUAN LOKASI BARU', style: TextStyle(color: Colors.black)),
+        title: const Text(
+          'PENGAJUAN LOKASI BARU',
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: const Color(0xFF2E3190),
       ),
       body: SingleChildScrollView(
@@ -137,8 +140,12 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
               decoration: InputDecoration(
                 labelText: 'Nama Store / Lokasi',
                 labelStyle: const TextStyle(color: Colors.grey),
-                enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: const Color(0xFF2E3190))),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF2E3190)),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -149,24 +156,37 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
               decoration: InputDecoration(
                 labelText: 'Alamat Lengkap',
                 labelStyle: const TextStyle(color: Colors.grey),
-                enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: const Color(0xFF2E3190))),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF2E3190)),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _getCurrentLocation,
               icon: const Icon(Icons.location_on),
-              label: Text(_currentPosition == null ? 'Ambil Koordinat Saat Ini' : 'Koordinat Tersimpan'),
+              label: Text(
+                _currentPosition == null
+                    ? 'Ambil Koordinat Saat Ini'
+                    : 'Koordinat Tersimpan',
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _currentPosition == null ? Colors.grey : Colors.green,
+                backgroundColor: _currentPosition == null
+                    ? Colors.grey
+                    : Colors.green,
                 foregroundColor: Colors.white,
               ),
             ),
             if (_currentPosition != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
-                child: Text('Lat: ${_currentPosition!.latitude}, Lon: ${_currentPosition!.longitude}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                child: Text(
+                  'Lat: ${_currentPosition!.latitude}, Lon: ${_currentPosition!.longitude}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -176,7 +196,12 @@ class _AddStoreScreenState extends State<AddStoreScreen> {
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: _isLoading ? const CircularProgressIndicator() : const Text('AJUKAN LOKASI', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text(
+                      'AJUKAN LOKASI',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
             ),
           ],
         ),

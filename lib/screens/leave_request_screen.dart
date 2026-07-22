@@ -45,7 +45,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190), // warna header kalender
+              primary: Color(0xFF2E3190), // warna header kalender
               onPrimary: Colors.black, // warna teks di header
               surface: Colors.white, // background kalender
               onSurface: Colors.white, // warna angka
@@ -171,7 +171,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke halaman sebelumnya
             },
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -216,33 +216,51 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     icon: const Icon(
                       Icons.arrow_drop_down,
-                      color: const Color(0xFF2E3190),
+                      color: Color(0xFF2E3190),
                     ),
                     isExpanded: true,
                     items: const [
                       DropdownMenuItem(
                         value: 'cuti',
-                        child: Text('Annual Leave', style: TextStyle(color: Colors.black87)),
+                        child: Text(
+                          'Annual Leave',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'izin',
-                        child: Text('Permission', style: TextStyle(color: Colors.black87)),
+                        child: Text(
+                          'Permission',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       DropdownMenuItem(
-                        value: 'sakit', 
-                        child: Text('Medical Leave', style: TextStyle(color: Colors.black87))
+                        value: 'sakit',
+                        child: Text(
+                          'Medical Leave',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       DropdownMenuItem(
-                        value: 'shift_swap', 
-                        child: Text('Shift Swap', style: TextStyle(color: Colors.black87))
+                        value: 'shift_swap',
+                        child: Text(
+                          'Shift Swap',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       DropdownMenuItem(
-                        value: 'extra_off', 
-                        child: Text('Extra Off', style: TextStyle(color: Colors.black87))
+                        value: 'extra_off',
+                        child: Text(
+                          'Extra Off',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       DropdownMenuItem(
-                        value: 'store_closed', 
-                        child: Text('Store Closed', style: TextStyle(color: Colors.black87))
+                        value: 'store_closed',
+                        child: Text(
+                          'Store Closed',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                     ],
                     onChanged: (value) {
@@ -281,7 +299,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -324,7 +342,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -366,7 +384,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
+                    borderSide: const BorderSide(color: Color(0xFF2E3190)),
                   ),
                 ),
               ),
@@ -406,7 +424,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           children: [
                             Icon(
                               Icons.upload_file,
-                              color: const Color(0xFF2E3190),
+                              color: Color(0xFF2E3190),
                               size: 40,
                             ),
                             SizedBox(height: 8),

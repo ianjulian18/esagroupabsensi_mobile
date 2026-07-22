@@ -54,7 +54,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190),
+              primary: Color(0xFF2E3190),
               onPrimary: Colors.black,
               surface: Colors.white,
               onSurface: Colors.white,
@@ -77,7 +77,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: const Color(0xFF2E3190),
+              primary: Color(0xFF2E3190),
               onPrimary: Colors.black,
               surface: Colors.white,
               onSurface: Colors.white,
@@ -172,7 +172,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke Home
             },
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -219,7 +219,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                     children: [
                       const Icon(
                         Icons.calendar_today,
-                        color: const Color(0xFF2E3190),
+                        color: Color(0xFF2E3190),
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -264,7 +264,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -310,7 +310,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: const Color(0xFF2E3190),
+                                  color: Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -379,7 +379,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
+                    borderSide: const BorderSide(color: Color(0xFF2E3190)),
                   ),
                 ),
               ),

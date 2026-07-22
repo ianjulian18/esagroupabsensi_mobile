@@ -20,6 +20,7 @@ import 'add_store_screen.dart';
 import '../models/schedule_model.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
 class HomeScreen extends StatefulWidget {
   final String token;
   final String name;
@@ -633,7 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -755,7 +756,10 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Center(
           child: ElevatedButton(
             onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E3190), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E3190),
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Logout'),
           ),
         ),
@@ -764,10 +768,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      body: IndexedStack(
-        index: _bottomNavIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _bottomNavIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _bottomNavIndex,
         onTap: (index) {
@@ -782,7 +783,10 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Payslip'),
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Activity'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: 'Activity',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Account'),
         ],
       ),
@@ -796,7 +800,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Header Merah
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24).copyWith(bottom: 60),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ).copyWith(bottom: 60),
               decoration: const BoxDecoration(
                 color: Color(0xFF2E3190),
                 borderRadius: BorderRadius.only(
@@ -838,7 +845,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            
+
             // Grid Menu
             Transform.translate(
               offset: const Offset(0, -40),
@@ -849,7 +856,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                    BoxShadow(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
                   ],
                 ),
                 child: Wrap(
@@ -857,26 +868,106 @@ class _HomeScreenState extends State<HomeScreen> {
                   runSpacing: 20,
                   alignment: WrapAlignment.spaceEvenly,
                   children: [
-                    _buildMenuIcon(Icons.history, 'Riwayat Absen', () => Navigator.push(context, MaterialPageRoute(builder: (_) => HistoryScreen(token: widget.token, baseUrl: widget.baseUrl)))),
-                    _buildMenuIcon(Icons.directions_run, 'Visit Log', () => Navigator.push(context, MaterialPageRoute(builder: (_) => VisitLogScreen(token: widget.token, baseUrl: widget.baseUrl, storeName: '')))),
-                    _buildMenuIcon(Icons.edit_calendar, 'Cuti / Izin', () => Navigator.push(context, MaterialPageRoute(builder: (_) => LeaveRequestScreen(token: widget.token, baseUrl: widget.baseUrl)))),
-                    _buildMenuIcon(Icons.add_location_alt, 'Tambah Lokasi', () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddStoreScreen(token: widget.token, baseUrl: widget.baseUrl)))),
-                    _buildMenuIcon(Icons.more_time, 'Lembur', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExtraHourScreen(token: widget.token, baseUrl: widget.baseUrl)))),
-                    _buildMenuIcon(Icons.post_add, 'Pengajuan BAP', () => Navigator.push(context, MaterialPageRoute(builder: (_) => BapScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                    _buildMenuIcon(
+                      Icons.history,
+                      'Riwayat Absen',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => HistoryScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildMenuIcon(
+                      Icons.directions_run,
+                      'Visit Log',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VisitLogScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                            storeName: '',
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildMenuIcon(
+                      Icons.edit_calendar,
+                      'Cuti / Izin',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LeaveRequestScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildMenuIcon(
+                      Icons.add_location_alt,
+                      'Tambah Lokasi',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddStoreScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildMenuIcon(
+                      Icons.more_time,
+                      'Lembur',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ExtraHourScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildMenuIcon(
+                      Icons.post_add,
+                      'Pengajuan BAP',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BapScreen(
+                            token: widget.token,
+                            baseUrl: widget.baseUrl,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            
+
             // Konten Bawah Grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Informasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const Text(
+                    'Informasi',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  
+
                   // Kotak Absen
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -884,7 +975,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
                       ],
                     ),
                     child: Column(
@@ -899,12 +994,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _todaySchedule?.shiftName ?? 'Area Absensi / Kantor',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                    _todaySchedule?.shiftName ??
+                                        'Area Absensi / Kantor',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
                                   ),
                                   Text(
-                                    _currentDistance != null ? '${_currentDistance!.toStringAsFixed(1)} Meter - $_statusMessage' : 'Mencari sinyal...',
-                                    style: TextStyle(fontSize: 12, color: isInRadius ? Colors.green : Colors.red),
+                                    _currentDistance != null
+                                        ? '${_currentDistance!.toStringAsFixed(1)} Meter - $_statusMessage'
+                                        : 'Mencari sinyal...',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isInRadius
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -919,41 +1026,81 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.access_time, size: 16, color: Colors.green),
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 16,
+                                    color: Colors.green,
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text('CHECK IN: ${_checkInTime?.hour.toString().padLeft(2,'0')}:${_checkInTime?.minute.toString().padLeft(2,'0')} WIB', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                  Text(
+                                    'CHECK IN: ${_checkInTime?.hour.toString().padLeft(2, '0')}:${_checkInTime?.minute.toString().padLeft(2, '0')} WIB',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
                                 ],
                               ),
-                              Text('Duration : ${_formattedDuration}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                              Text(
+                                'Duration : $_formattedDuration',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
                             ],
                           ),
-                        if (_isCheckedIn && !_isCheckedOut) const SizedBox(height: 16),
-                        
+                        if (_isCheckedIn && !_isCheckedOut)
+                          const SizedBox(height: 16),
+
                         // Slider / Action area
                         if (_isCheckedOut)
                           const Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text('Sesi Kerja Hari Ini Selesai', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                'Sesi Kerja Hari Ini Selesai',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           )
                         else if (!_isCheckedIn)
-                          _buildSlider(label: 'GESER UNTUK CHECK IN', color: const Color(0xFF2E3190), onAction: _processAttendance)
+                          _buildSlider(
+                            label: 'GESER UNTUK CHECK IN',
+                            color: const Color(0xFF2E3190),
+                            onAction: _processAttendance,
+                          )
                         else if (_isCheckedIn && !_isVisiting)
                           Column(
                             children: [
-                              _buildSlider(label: 'Checkout >>', color: const Color(0xFF2E3190), onAction: _processAttendance),
+                              _buildSlider(
+                                label: 'Checkout >>',
+                                color: const Color(0xFF2E3190),
+                                onAction: _processAttendance,
+                              ),
                               const SizedBox(height: 16),
                               // Visit Mode
-                              if (_todaySchedule != null && _todaySchedule!.stores.isNotEmpty)
+                              if (_todaySchedule != null &&
+                                  _todaySchedule!.stores.isNotEmpty)
                                 DropdownButtonFormField<String>(
-                                  value: _todaySchedule!.stores.contains(_locationController.text)
+                                  initialValue:
+                                      _todaySchedule!.stores.contains(
+                                        _locationController.text,
+                                      )
                                       ? _locationController.text
                                       : null,
-                                  items: _todaySchedule!.stores.map((String store) {
+                                  items: _todaySchedule!.stores.map((
+                                    String store,
+                                  ) {
                                     return DropdownMenuItem<String>(
                                       value: store,
-                                      child: Text(store, overflow: TextOverflow.ellipsis),
+                                      child: Text(
+                                        store,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     );
                                   }).toList(),
                                   onChanged: (String? newValue) {
@@ -965,10 +1112,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                   decoration: InputDecoration(
                                     labelText: 'Pilih Toko / Lokasi Visit',
-                                    labelStyle: const TextStyle(color: Colors.grey),
-                                    prefixIcon: const Icon(Icons.store, color: Colors.grey),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                                    labelStyle: const TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Icons.store,
+                                      color: Colors.grey,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
                                   ),
                                 )
                               else
@@ -976,20 +1132,39 @@ class _HomeScreenState extends State<HomeScreen> {
                                   controller: _locationController,
                                   decoration: InputDecoration(
                                     labelText: 'Nama Toko / Lokasi Visit',
-                                    labelStyle: const TextStyle(color: Colors.grey),
-                                    prefixIcon: const Icon(Icons.store, color: Colors.grey),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                                    labelStyle: const TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Icons.store,
+                                      color: Colors.grey,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
                                   ),
                                 ),
                               const SizedBox(height: 12),
-                              _buildSlider(label: 'VISIT IN >>', color: const Color(0xFF3F51B5), onAction: _processVisitIn),
+                              _buildSlider(
+                                label: 'VISIT IN >>',
+                                color: const Color(0xFF3F51B5),
+                                onAction: _processVisitIn,
+                              ),
                             ],
                           )
                         else if (_isVisiting)
                           Column(
                             children: [
-                              Text('Sedang Visit di: ${_locationController.text}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                              Text(
+                                'Sedang Visit di: ${_locationController.text}',
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
                                 onPressed: () {
@@ -1004,25 +1179,52 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   );
                                 },
-                                icon: const Icon(Icons.edit_document, color: Color(0xFF2E3190)),
-                                label: const Text('Isi Laporan Visit (Visit Log)', style: TextStyle(color: Color(0xFF2E3190), fontWeight: FontWeight.bold)),
+                                icon: const Icon(
+                                  Icons.edit_document,
+                                  color: Color(0xFF2E3190),
+                                ),
+                                label: const Text(
+                                  'Isi Laporan Visit (Visit Log)',
+                                  style: TextStyle(
+                                    color: Color(0xFF2E3190),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFF2E3190)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  side: const BorderSide(
+                                    color: Color(0xFF2E3190),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _buildSlider(label: 'VISIT OUT >>', color: Colors.orangeAccent, onAction: _processVisitOut),
+                              _buildSlider(
+                                label: 'VISIT OUT >>',
+                                color: Colors.orangeAccent,
+                                onAction: _processVisitOut,
+                              ),
                             ],
                           ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
                   // Riwayat Geofence
-                  const Text('Riwayat Geofence (Hari Ini)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const Text(
+                    'Riwayat Geofence (Hari Ini)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -1030,17 +1232,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
                       ],
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
-                             _isCheckedIn && _checkInTime != null
-                                ? '${_checkInTime!.day} ${_checkInTime!.month} ${_checkInTime!.hour.toString().padLeft(2,'0')}:${_checkInTime!.minute.toString().padLeft(2,'0')} — Masuk area kantor'
+                            _isCheckedIn && _checkInTime != null
+                                ? '${_checkInTime!.day} ${_checkInTime!.month} ${_checkInTime!.hour.toString().padLeft(2, '0')}:${_checkInTime!.minute.toString().padLeft(2, '0')} — Masuk area kantor'
                                 : 'Belum ada riwayat check-in hari ini',
-                             style: const TextStyle(color: Colors.green, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -1070,7 +1279,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Icon(icon, color: Colors.grey, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
         ],
       ),
     );
@@ -1094,7 +1310,10 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(12),
         child: FlutterMap(
           options: MapOptions(
-            initialCenter: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+            initialCenter: LatLng(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+            ),
             initialZoom: 16.0,
           ),
           children: [
@@ -1117,16 +1336,27 @@ class _HomeScreenState extends State<HomeScreen> {
             MarkerLayer(
               markers: [
                 Marker(
-                  point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+                  point: LatLng(
+                    _currentPosition!.latitude,
+                    _currentPosition!.longitude,
+                  ),
                   width: 40,
                   height: 40,
-                  child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                  child: const Icon(
+                    Icons.location_on,
+                    color: Colors.red,
+                    size: 40,
+                  ),
                 ),
                 Marker(
                   point: LatLng(widget.officeLat, widget.officeLon),
                   width: 40,
                   height: 40,
-                  child: const Icon(Icons.business, color: Color(0xFF2E3190), size: 40),
+                  child: const Icon(
+                    Icons.business,
+                    color: Color(0xFF2E3190),
+                    size: 40,
+                  ),
                 ),
               ],
             ),
@@ -1137,46 +1367,67 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<bool> _showMapConfirmationDialog() async {
-    if (_currentPosition == null) return true; // If no pos yet, just bypass or handle error. Usually not null here.
+    if (_currentPosition == null)
+      return true; // If no pos yet, just bypass or handle error. Usually not null here.
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Konfirmasi Lokasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: Column(
-              children: [
-                Expanded(child: _buildMap()),
-                const SizedBox(height: 12),
-                const Text(
-                  'Pastikan lokasi Anda (merah) sudah benar dan akurat.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text(
+                'Konfirmasi Lokasi',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 300,
+                child: Column(
+                  children: [
+                    Expanded(child: _buildMap()),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Pastikan lokasi Anda (merah) sudah benar dan akurat.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E3190),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Lanjut Buka Kamera',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E3190),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('Lanjut Buka Kamera', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    ) ?? false;
+            );
+          },
+        ) ??
+        false;
   }
 
   Future<bool> _detectFace(String imagePath) async {

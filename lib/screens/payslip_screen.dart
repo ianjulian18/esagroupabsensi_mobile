@@ -121,7 +121,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
               child: Text(
                 'SLIP GAJI - ${_formatMonthYear(slip['period']).toUpperCase()}',
                 style: const TextStyle(
-                  color: const Color(0xFF2E3190),
+                  color: Color(0xFF2E3190),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -283,41 +283,104 @@ class _PayslipScreenState extends State<PayslipScreen> {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text('ESA GROUP', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                child: pw.Text(
+                  'ESA GROUP',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ),
               pw.Center(
                 child: pw.Text('SLIP GAJI', style: pw.TextStyle(fontSize: 18)),
               ),
               pw.SizedBox(height: 30),
-              pw.Text('Periode: ${_formatMonthYear(slip['period']).toUpperCase()}', style: pw.TextStyle(fontSize: 14)),
+              pw.Text(
+                'Periode: ${_formatMonthYear(slip['period']).toUpperCase()}',
+                style: pw.TextStyle(fontSize: 14),
+              ),
               pw.SizedBox(height: 20),
-              
-              pw.Text('PENDAPATAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+
+              pw.Text(
+                'PENDAPATAN',
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
               pw.Divider(),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Gaji Pokok'), pw.Text(_formatRupiah(slip['basic_salary']))]),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Gaji Pokok'),
+                  pw.Text(_formatRupiah(slip['basic_salary'])),
+                ],
+              ),
               pw.SizedBox(height: 8),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Tunjangan'), pw.Text(_formatRupiah(slip['allowances']))]),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Tunjangan'),
+                  pw.Text(_formatRupiah(slip['allowances'])),
+                ],
+              ),
               pw.SizedBox(height: 8),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Uang Lembur'), pw.Text(_formatRupiah(slip['overtime_pay']))]),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Uang Lembur'),
+                  pw.Text(_formatRupiah(slip['overtime_pay'])),
+                ],
+              ),
               pw.SizedBox(height: 20),
-              
-              pw.Text('POTONGAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+
+              pw.Text(
+                'POTONGAN',
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
               pw.Divider(),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Total Potongan'), pw.Text(_formatRupiah(slip['deductions']))]),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Total Potongan'),
+                  pw.Text(_formatRupiah(slip['deductions'])),
+                ],
+              ),
               pw.SizedBox(height: 20),
-              
+
               pw.Divider(thickness: 2),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-                pw.Text('GAJI BERSIH', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)), 
-                pw.Text(_formatRupiah(slip['net_salary']), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold))
-              ]),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'GAJI BERSIH',
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    _formatRupiah(slip['net_salary']),
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ],
           );
         },
       ),
     );
 
-    await Printing.sharePdf(bytes: await pdf.save(), filename: 'Slip_Gaji_${slip['period']}.pdf');
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'Slip_Gaji_${slip['period']}.pdf',
+    );
   }
 
   Widget _buildDetailRow(String label, dynamic value, Color valueColor) {
@@ -349,7 +412,9 @@ class _PayslipScreenState extends State<PayslipScreen> {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: const Color(0xFF2E3190)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2E3190)),
+            )
           : _payslips.isEmpty
           ? const Center(
               child: Column(
@@ -379,7 +444,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
                     leading: const CircleAvatar(
-                      backgroundColor: const Color(0xFF2E3190),
+                      backgroundColor: Color(0xFF2E3190),
                       child: Icon(Icons.request_quote, color: Colors.black),
                     ),
                     title: Text(
