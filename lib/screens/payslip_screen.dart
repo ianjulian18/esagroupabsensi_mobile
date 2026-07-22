@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class PayslipScreen extends StatefulWidget {
   final String token;
@@ -96,7 +99,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
             MediaQuery.of(context).size.height *
             0.75, // Tinggi pop-up 75% layar
         decoration: const BoxDecoration(
-          color: Color(0xFF1E1E1E),
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -118,7 +121,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
               child: Text(
                 'SLIP GAJI - ${_formatMonthYear(slip['period']).toUpperCase()}',
                 style: const TextStyle(
-                  color: Colors.amber,
+                  color: const Color(0xFF2E3190),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -215,31 +218,106 @@ class _PayslipScreenState extends State<PayslipScreen> {
             // -------------------------------------------------------------
 
             // Tombol Tutup (Akan selalu menempel di paling bawah)
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[800],
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    label: const Text(
+                      'TUTUP',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.check, color: Colors.black),
-                label: const Text(
-                  'TUTUP',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E3190),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _downloadPdf(slip);
+                    },
+                    icon: const Icon(Icons.download, color: Colors.black),
+                    label: const Text(
+                      'UNDUH PDF',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _downloadPdf(dynamic slip) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                child: pw.Text('ESA GROUP', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              ),
+              pw.Center(
+                child: pw.Text('SLIP GAJI', style: pw.TextStyle(fontSize: 18)),
+              ),
+              pw.SizedBox(height: 30),
+              pw.Text('Periode: ${_formatMonthYear(slip['period']).toUpperCase()}', style: pw.TextStyle(fontSize: 14)),
+              pw.SizedBox(height: 20),
+              
+              pw.Text('PENDAPATAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Divider(),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Gaji Pokok'), pw.Text(_formatRupiah(slip['basic_salary']))]),
+              pw.SizedBox(height: 8),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Tunjangan'), pw.Text(_formatRupiah(slip['allowances']))]),
+              pw.SizedBox(height: 8),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Uang Lembur'), pw.Text(_formatRupiah(slip['overtime_pay']))]),
+              pw.SizedBox(height: 20),
+              
+              pw.Text('POTONGAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Divider(),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Total Potongan'), pw.Text(_formatRupiah(slip['deductions']))]),
+              pw.SizedBox(height: 20),
+              
+              pw.Divider(thickness: 2),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+                pw.Text('GAJI BERSIH', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)), 
+                pw.Text(_formatRupiah(slip['net_salary']), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold))
+              ]),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'Slip_Gaji_${slip['period']}.pdf');
   }
 
   Widget _buildDetailRow(String label, dynamic value, Color valueColor) {
@@ -261,17 +339,17 @@ class _PayslipScreenState extends State<PayslipScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         title: const Text(
           'SLIP GAJI',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF2E3190),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+          ? const Center(child: CircularProgressIndicator(color: const Color(0xFF2E3190)))
           : _payslips.isEmpty
           ? const Center(
               child: Column(
@@ -292,7 +370,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
               itemBuilder: (context, index) {
                 final slip = _payslips[index];
                 return Card(
-                  color: const Color(0xFF1E1E1E),
+                  color: Colors.white,
                   margin: const EdgeInsets.only(bottom: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -301,7 +379,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
                     leading: const CircleAvatar(
-                      backgroundColor: Colors.amber,
+                      backgroundColor: const Color(0xFF2E3190),
                       child: Icon(Icons.request_quote, color: Colors.black),
                     ),
                     title: Text(

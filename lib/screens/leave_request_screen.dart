@@ -45,9 +45,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber, // warna header kalender
+              primary: const Color(0xFF2E3190), // warna header kalender
               onPrimary: Colors.black, // warna teks di header
-              surface: Color(0xFF1E1E1E), // background kalender
+              surface: Colors.white, // background kalender
               onSurface: Colors.white, // warna angka
             ),
           ),
@@ -156,7 +156,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),
@@ -171,7 +171,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke halaman sebelumnya
             },
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -181,13 +181,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         title: const Text(
           'PENGAJUAN CUTI / IZIN',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF2E3190),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -205,30 +205,45 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[800]!),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedType,
-                    dropdownColor: const Color(0xFF1E1E1E),
+                    dropdownColor: Colors.white,
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     icon: const Icon(
                       Icons.arrow_drop_down,
-                      color: Colors.amber,
+                      color: const Color(0xFF2E3190),
                     ),
                     isExpanded: true,
                     items: const [
                       DropdownMenuItem(
                         value: 'cuti',
-                        child: Text('Cuti Tahunan'),
+                        child: Text('Annual Leave', style: TextStyle(color: Colors.black87)),
                       ),
                       DropdownMenuItem(
                         value: 'izin',
-                        child: Text('Izin Tidak Masuk'),
+                        child: Text('Permission', style: TextStyle(color: Colors.black87)),
                       ),
-                      DropdownMenuItem(value: 'sakit', child: Text('Sakit')),
+                      DropdownMenuItem(
+                        value: 'sakit', 
+                        child: Text('Medical Leave', style: TextStyle(color: Colors.black87))
+                      ),
+                      DropdownMenuItem(
+                        value: 'shift_swap', 
+                        child: Text('Shift Swap', style: TextStyle(color: Colors.black87))
+                      ),
+                      DropdownMenuItem(
+                        value: 'extra_off', 
+                        child: Text('Extra Off', style: TextStyle(color: Colors.black87))
+                      ),
+                      DropdownMenuItem(
+                        value: 'store_closed', 
+                        child: Text('Store Closed', style: TextStyle(color: Colors.black87))
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() => _selectedType = value!);
@@ -258,7 +273,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -266,7 +281,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -301,7 +316,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -309,7 +324,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -344,14 +359,14 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   hintText: 'Tuliskan alasan pengajuan Anda di sini...',
                   hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: const Color(0xFF1E1E1E),
+                  fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[800]!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.amber),
+                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
                   ),
                 ),
               ),
@@ -368,7 +383,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 child: Container(
                   height: 120,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _document != null
@@ -391,7 +406,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           children: [
                             Icon(
                               Icons.upload_file,
-                              color: Colors.amber,
+                              color: const Color(0xFF2E3190),
                               size: 40,
                             ),
                             SizedBox(height: 8),
@@ -410,7 +425,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor: const Color(0xFF2E3190),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

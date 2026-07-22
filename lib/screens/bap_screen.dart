@@ -47,9 +47,9 @@ class _BapScreenState extends State<BapScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,
+              primary: const Color(0xFF2E3190),
               onPrimary: Colors.black,
-              surface: Color(0xFF1E1E1E),
+              surface: Colors.white,
               onSurface: Colors.white,
             ),
           ),
@@ -68,9 +68,9 @@ class _BapScreenState extends State<BapScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,
+              primary: const Color(0xFF2E3190),
               onPrimary: Colors.black,
-              surface: Color(0xFF1E1E1E),
+              surface: Colors.white,
               onSurface: Colors.white,
             ),
           ),
@@ -84,13 +84,13 @@ class _BapScreenState extends State<BapScreen> {
   Future<void> _pickImage() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: Colors.white,
       builder: (BuildContext bc) {
         return SafeArea(
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.amber),
+                leading: const Icon(Icons.photo_library, color: const Color(0xFF2E3190)),
                 title: const Text(
                   'Ambil dari Galeri',
                   style: TextStyle(color: Colors.white),
@@ -105,7 +105,7 @@ class _BapScreenState extends State<BapScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera, color: Colors.amber),
+                leading: const Icon(Icons.photo_camera, color: const Color(0xFF2E3190)),
                 title: const Text(
                   'Buka Kamera',
                   style: TextStyle(color: Colors.white),
@@ -206,7 +206,7 @@ class _BapScreenState extends State<BapScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),
@@ -221,7 +221,7 @@ class _BapScreenState extends State<BapScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -231,13 +231,13 @@ class _BapScreenState extends State<BapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         title: const Text(
           'PENGAJUAN BAP',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF2E3190),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -252,19 +252,19 @@ class _BapScreenState extends State<BapScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedType,
-                dropdownColor: const Color(0xFF1E1E1E),
+                initialValue: _selectedType,
+                dropdownColor: Colors.white,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color(0xFF1E1E1E),
+                  fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[800]!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.amber),
+                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
                   ),
                 ),
                 hint: const Text(
@@ -302,7 +302,7 @@ class _BapScreenState extends State<BapScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -310,7 +310,7 @@ class _BapScreenState extends State<BapScreen> {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -349,7 +349,7 @@ class _BapScreenState extends State<BapScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -357,7 +357,7 @@ class _BapScreenState extends State<BapScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -391,7 +391,7 @@ class _BapScreenState extends State<BapScreen> {
                 child: Container(
                   height: 150,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Colors.grey[800]!,
@@ -446,14 +446,14 @@ class _BapScreenState extends State<BapScreen> {
                   hintText: 'Misal: Lupa absen, HP mati, GPS bermasalah...',
                   hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: const Color(0xFF1E1E1E),
+                  fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[800]!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.amber),
+                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
                   ),
                 ),
               ),
@@ -463,7 +463,7 @@ class _BapScreenState extends State<BapScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor: const Color(0xFF2E3190),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

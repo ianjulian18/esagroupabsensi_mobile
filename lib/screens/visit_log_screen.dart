@@ -43,9 +43,9 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,
+              primary: const Color(0xFF2E3190),
               onPrimary: Colors.black,
-              surface: Color(0xFF1E1E1E),
+              surface: Colors.white,
               onSurface: Colors.white,
             ),
           ),
@@ -121,7 +121,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),
@@ -136,7 +136,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke halaman utama (Home)
             },
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -158,14 +158,14 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
           labelText: label,
           labelStyle: const TextStyle(color: Colors.grey),
           filled: true,
-          fillColor: const Color(0xFF1E1E1E),
+          fillColor: Colors.white,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey[800]!),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.amber),
+            borderSide: const BorderSide(color: const Color(0xFF2E3190)),
           ),
         ),
       ),
@@ -175,13 +175,13 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         title: const Text(
           'VISIT LOG',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF2E3190),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -193,7 +193,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.1),
+                  color: Colors.blueAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.blueAccent),
                 ),
@@ -246,7 +246,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
                     horizontal: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[800]!),
                   ),
@@ -254,7 +254,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
                     children: [
                       const Icon(
                         Icons.calendar_today,
-                        color: Colors.amber,
+                        color: const Color(0xFF2E3190),
                         size: 18,
                       ),
                       const SizedBox(width: 8),
@@ -281,7 +281,7 @@ class _VisitLogScreenState extends State<VisitLogScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor: const Color(0xFF2E3190),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

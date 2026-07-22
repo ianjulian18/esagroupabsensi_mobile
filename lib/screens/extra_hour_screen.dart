@@ -35,6 +35,13 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
     return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
   }
 
+  bool _isCrossDay() {
+    if (_startTime == null || _endTime == null) return false;
+    final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
+    final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
+    return endMinutes < startMinutes;
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -47,9 +54,9 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,
+              primary: const Color(0xFF2E3190),
               onPrimary: Colors.black,
-              surface: Color(0xFF1E1E1E),
+              surface: Colors.white,
               onSurface: Colors.white,
             ),
           ),
@@ -70,9 +77,9 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,
+              primary: const Color(0xFF2E3190),
               onPrimary: Colors.black,
-              surface: Color(0xFF1E1E1E),
+              surface: Colors.white,
               onSurface: Colors.white,
             ),
           ),
@@ -150,7 +157,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),
@@ -165,7 +172,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
               Navigator.pop(context); // Tutup dialog
               Navigator.pop(context); // Kembali ke Home
             },
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -175,13 +182,13 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         title: const Text(
           'KLAIM LEMBUR',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
-        backgroundColor: Colors.amber,
+        backgroundColor: const Color(0xFF2E3190),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
@@ -204,7 +211,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                     horizontal: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[800]!),
                   ),
@@ -212,7 +219,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                     children: [
                       const Icon(
                         Icons.calendar_today,
-                        color: Colors.amber,
+                        color: const Color(0xFF2E3190),
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -249,7 +256,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -257,7 +264,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -295,7 +302,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               horizontal: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1E1E),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[800]!),
                             ),
@@ -303,7 +310,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                               children: [
                                 const Icon(
                                   Icons.access_time,
-                                  color: Colors.amber,
+                                  color: const Color(0xFF2E3190),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -325,7 +332,30 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+              if (_isCrossDay())
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Peringatan: Jam selesai lebih awal dari jam mulai. Ini akan dihitung sebagai lembur lintas hari (Cross-Day).',
+                          style: TextStyle(color: Colors.orange, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 12),
 
               // 3. Alasan / Pekerjaan
               const Text(
@@ -342,14 +372,14 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                       'Tuliskan detail pekerjaan yang Anda lakukan saat lembur...',
                   hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: const Color(0xFF1E1E1E),
+                  fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[800]!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.amber),
+                    borderSide: const BorderSide(color: const Color(0xFF2E3190)),
                   ),
                 ),
               ),
@@ -360,7 +390,7 @@ class _ExtraHourScreenState extends State<ExtraHourScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor: const Color(0xFF2E3190),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

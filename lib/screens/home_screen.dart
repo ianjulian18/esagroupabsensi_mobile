@@ -4,13 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+
+import 'package:flutter/services.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../services/db_helper.dart';
+import '../services/sync_service.dart';
 import 'history_screen.dart';
 import 'leave_request_screen.dart';
 import 'extra_hour_screen.dart';
 import 'bap_screen.dart';
 import 'payslip_screen.dart';
 import 'visit_log_screen.dart';
-
+import 'add_store_screen.dart';
+import '../models/schedule_model.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 class HomeScreen extends StatefulWidget {
   final String token;
   final String name;
@@ -19,6 +28,8 @@ class HomeScreen extends StatefulWidget {
   final double officeLon;
   final double maxRadius;
   final bool isLocationLocked;
+  final String entityName;
+  final List<dynamic> principals;
 
   const HomeScreen({
     super.key,
@@ -29,6 +40,8 @@ class HomeScreen extends StatefulWidget {
     required this.officeLon,
     required this.maxRadius,
     required this.isLocationLocked,
+    required this.entityName,
+    required this.principals,
   });
 
   @override
@@ -36,8 +49,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _bottomNavIndex = 0;
   bool _isLoading = false;
   String _statusMessage = 'Geser tombol di bawah untuk melakukan absensi';
+  Schedule? _todaySchedule; // Variabel untuk menyimpan data jadwal hari ini
+  bool _isLoadingSchedule = true; // Indikator loading khusus jadwal
 
   late double officeLat;
   late double officeLon;
@@ -45,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late bool isLocationLocked;
 
   double? _currentDistance;
+  Position? _currentPosition;
   bool _isFetchingLocation = false;
   StreamSubscription<Position>? _positionStreamSubscription;
 
@@ -75,7 +92,20 @@ class _HomeScreenState extends State<HomeScreen> {
     officeLon = widget.officeLon;
     maxRadius = widget.maxRadius;
     isLocationLocked = widget.isLocationLocked;
+    _fetchSchedule();
     _startLocationStream();
+    _syncOfflineData();
+  }
+
+  Future<void> _syncOfflineData() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (!connectivityResult.contains(ConnectivityResult.none)) {
+      final syncService = SyncService(
+        baseUrl: widget.baseUrl,
+        token: widget.token,
+      );
+      await syncService.syncOfflineData();
+    }
   }
 
   @override
@@ -109,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
           (Position position) {
             if (mounted) {
               setState(() {
+                _currentPosition = position;
                 _currentDistance = Geolocator.distanceBetween(
                   position.latitude,
                   position.longitude,
@@ -131,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (position != null && mounted) {
       setState(() {
+        _currentPosition = position;
         _currentDistance = Geolocator.distanceBetween(
           position.latitude,
           position.longitude,
@@ -167,9 +199,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (permission == LocationPermission.deniedForever) return null;
 
-    return await Geolocator.getCurrentPosition(
+    Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.best,
     );
+
+    // Deteksi Fake GPS (Mock Location)
+    if (position.isMocked) {
+      if (mounted) {
+        setState(
+          () => _statusMessage =
+              'Gagal: Aplikasi Fake GPS terdeteksi. Matikan untuk absen!',
+        );
+        _showErrorSnackBar('Peringatan: Fake GPS terdeteksi!');
+      }
+      return null;
+    }
+
+    return position;
   }
 
   // --- API 1: CHECK-IN & CHECK-OUT UTAMA ---
@@ -178,6 +224,18 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
       _statusMessage = 'Memverifikasi radius lokasi...';
     });
+
+    bool isLate = _checkIfLate();
+    if (isLate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '⚠️ Anda Check-In di luar jam toleransi! Status: TERLAMBAT.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
 
     try {
       Position? position = await _getCurrentLocation();
@@ -205,6 +263,15 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      bool confirm = await _showMapConfirmationDialog();
+      if (!confirm) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Dibatalkan.';
+        });
+        return;
+      }
+
       setState(() => _statusMessage = 'Membuka kamera...');
       final ImagePicker picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
@@ -221,7 +288,52 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      setState(() => _statusMessage = 'Mengirim data absen...');
+      setState(() => _statusMessage = 'Mendeteksi wajah...');
+      bool hasFace = await _detectFace(photo.path);
+      if (!hasFace) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Ditolak: Wajah tidak terdeteksi pada foto!';
+        });
+        _showErrorSnackBar('Gagal: Wajah tidak terdeteksi!');
+        return;
+      }
+
+      setState(() => _statusMessage = 'Memeriksa koneksi & mengirim data...');
+
+      final connectivityResult = await Connectivity().checkConnectivity();
+      final hasInternet = !connectivityResult.contains(ConnectivityResult.none);
+
+      if (!hasInternet) {
+        // Mode Offline: Simpan ke SQLite
+        final dbHelper = DBHelper();
+        await dbHelper.insertOfflineAttendance({
+          'type': 'attendance',
+          'latitude': position.latitude.toString(),
+          'longitude': position.longitude.toString(),
+          'photo_path': photo.path,
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+        setState(() {
+          _statusMessage = 'Offline: Data disimpan lokal.';
+          if (_isCheckedIn) {
+            _isCheckedOut = true;
+            _timer?.cancel();
+          } else {
+            _isCheckedIn = true;
+            _checkInTime = DateTime.now();
+            _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+              setState(
+                () => _workDuration = DateTime.now().difference(_checkInTime!),
+              );
+            });
+          }
+        });
+        _showSuccessDialog(
+          'Mode Offline: Absen berhasil disimpan secara lokal dan akan disinkronisasi saat online.',
+        );
+        return;
+      }
 
       var request = http.MultipartRequest(
         'POST',
@@ -243,11 +355,9 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _statusMessage = data['message'];
           if (_isCheckedIn) {
-            // Jika sebelumnya sudah Check-In, berarti ini adalah Check-Out harian
             _isCheckedOut = true;
             _timer?.cancel();
           } else {
-            // Ini adalah Check-In Pagi
             _isCheckedIn = true;
             _checkInTime = DateTime.now();
             _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -287,6 +397,15 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      bool confirm = await _showMapConfirmationDialog();
+      if (!confirm) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Dibatalkan.';
+        });
+        return;
+      }
+
       final ImagePicker picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
         source: ImageSource.camera,
@@ -302,7 +421,18 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      setState(() => _statusMessage = 'Menyimpan Visit In...');
+      setState(() => _statusMessage = 'Mendeteksi wajah...');
+      bool hasFace = await _detectFace(photo.path);
+      if (!hasFace) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Ditolak: Wajah tidak terdeteksi pada foto!';
+        });
+        _showErrorSnackBar('Gagal: Wajah tidak terdeteksi!');
+        return;
+      }
+
+      setState(() => _statusMessage = 'Memeriksa koneksi & mengirim data...');
 
       var request = http.MultipartRequest(
         'POST',
@@ -353,6 +483,15 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      bool confirm = await _showMapConfirmationDialog();
+      if (!confirm) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Dibatalkan.';
+        });
+        return;
+      }
+
       final ImagePicker picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
         source: ImageSource.camera,
@@ -365,6 +504,17 @@ class _HomeScreenState extends State<HomeScreen> {
           _isLoading = false;
           _statusMessage = 'Batal: Foto wajib.';
         });
+        return;
+      }
+
+      setState(() => _statusMessage = 'Mendeteksi wajah...');
+      bool hasFace = await _detectFace(photo.path);
+      if (!hasFace) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Ditolak: Wajah tidak terdeteksi pada foto!';
+        });
+        _showErrorSnackBar('Gagal: Wajah tidak terdeteksi!');
         return;
       }
 
@@ -403,6 +553,59 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _fetchSchedule() async {
+    setState(() => _isLoadingSchedule = true);
+    try {
+      final response = await http.get(
+        Uri.parse('${widget.baseUrl}/my-schedule'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success' && data['data'] != null) {
+          setState(() {
+            _todaySchedule = Schedule.fromJson(data['data']);
+
+            // Override office coordinates if API provides them (e.g., First Visit Lock)
+            if (_todaySchedule!.officeLatitude != null &&
+                _todaySchedule!.officeLongitude != null) {
+              officeLat = _todaySchedule!.officeLatitude!;
+              officeLon = _todaySchedule!.officeLongitude!;
+            }
+          });
+
+          // Recalculate distance against the new coordinates
+          _refreshLocation();
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
+    } finally {
+      setState(() => _isLoadingSchedule = false);
+    }
+  }
+
+  bool _checkIfLate() {
+    if (_todaySchedule == null) return false;
+    final now = DateTime.now();
+    final parts = _todaySchedule!.startTime.split(':');
+    final shiftStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
+    final limitTime = shiftStart.add(
+      Duration(minutes: _todaySchedule!.lateTolerance),
+    );
+    return now.isAfter(limitTime);
+  }
+
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -418,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green),
@@ -430,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: Colors.amber)),
+            child: const Text('OK', style: TextStyle(color: const Color(0xFF2E3190))),
           ),
         ],
       ),
@@ -446,16 +649,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         double trackWidth = constraints.maxWidth;
-        double knobSize = 64.0;
+        double knobSize = 56.0;
         double maxDragDistance = trackWidth - knobSize - 8.0;
 
         return Container(
-          height: 72,
+          height: 64,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: Colors.grey[800]!),
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
           child: Stack(
             alignment: Alignment.centerLeft,
@@ -464,10 +667,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   _isLoading ? 'MEMPROSES...' : label,
                   style: TextStyle(
-                    color: color.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    letterSpacing: 1.2,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ),
@@ -502,8 +705,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.4),
-                          blurRadius: 10,
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
@@ -511,15 +714,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: _isLoading
                           ? const SizedBox(
-                              width: 26,
-                              height: 26,
+                              width: 24,
+                              height: 24,
                               child: CircularProgressIndicator(
-                                color: Colors.black,
+                                color: Colors.white,
                                 strokeWidth: 2.5,
                               ),
                             )
                           : const Icon(
-                              Icons.arrow_forward_ios,
+                              Icons.arrow_forward_outlined,
                               color: Colors.white,
                               size: 24,
                             ),
@@ -540,413 +743,454 @@ class _HomeScreenState extends State<HomeScreen> {
         !isLocationLocked ||
         (_currentDistance != null && _currentDistance! <= maxRadius);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text(
-          'ESA GROUP ABSENSI',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+    final List<Widget> pages = [
+      _buildDashboard(isInRadius),
+      PayslipScreen(token: widget.token, baseUrl: widget.baseUrl),
+      HistoryScreen(token: widget.token, baseUrl: widget.baseUrl),
+      Scaffold(
+        appBar: AppBar(
+          title: const Text('Account', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color(0xFF2E3190),
         ),
-        backgroundColor: Colors.amber,
-        elevation: 0,
-        actions: [
-          // --- TOMBOL SLIP GAJI (BARU) ---
-          IconButton(
-            icon: const Icon(Icons.receipt_long, color: Colors.black),
-            tooltip: 'Slip Gaji',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    PayslipScreen(token: widget.token, baseUrl: widget.baseUrl),
-              ),
-            ),
-          ),
-          // --- TOMBOL BAP (BARU) ---
-          IconButton(
-            icon: const Icon(Icons.post_add, color: Colors.black),
-            tooltip: 'Pengajuan BAP',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    BapScreen(token: widget.token, baseUrl: widget.baseUrl),
-              ),
-            ),
-          ),
-          // --- TOMBOL LEMBUR (BARU) ---
-          IconButton(
-            icon: const Icon(Icons.more_time, color: Colors.black),
-            tooltip: 'Klaim Lembur',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ExtraHourScreen(
-                  token: widget.token,
-                  baseUrl: widget.baseUrl,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit_calendar, color: Colors.black),
-            tooltip: 'Pengajuan Cuti/Izin',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LeaveRequestScreen(
-                  token: widget.token,
-                  baseUrl: widget.baseUrl,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.black),
-            tooltip: 'Riwayat Absensi',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    HistoryScreen(token: widget.token, baseUrl: widget.baseUrl),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+        body: Center(
+          child: ElevatedButton(
             onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E3190), foregroundColor: Colors.white),
+            child: const Text('Logout'),
           ),
+        ),
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
+      body: IndexedStack(
+        index: _bottomNavIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _bottomNavIndex,
+        onTap: (index) {
+          setState(() {
+            _bottomNavIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF2E3190),
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Payslip'),
+          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Activity'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Account'),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 10),
-              const Icon(Icons.account_circle, size: 80, color: Colors.grey),
-              const SizedBox(height: 12),
-              Text(
-                'Selamat Datang,',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey[400]),
-              ),
-              Text(
-                widget.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 30),
+    );
+  }
 
-              // KARTU LOKASI
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
+  Widget _buildDashboard(bool isInRadius) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header Merah
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24).copyWith(bottom: 60),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2E3190),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isInRadius
-                        ? Colors.green.withValues(alpha: 0.5)
-                        : Colors.redAccent.withValues(alpha: 0.5),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 40, color: Colors.grey),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isInRadius
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : Colors.redAccent.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      spreadRadius: 2,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          widget.entityName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const Icon(Icons.notifications, color: Colors.white),
+                ],
+              ),
+            ),
+            
+            // Grid Menu
+            Transform.translate(
+              offset: const Offset(0, -40),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Wrap(
+                  spacing: 20,
+                  runSpacing: 20,
+                  alignment: WrapAlignment.spaceEvenly,
                   children: [
-                    Row(
+                    _buildMenuIcon(Icons.history, 'Riwayat Absen', () => Navigator.push(context, MaterialPageRoute(builder: (_) => HistoryScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                    _buildMenuIcon(Icons.directions_run, 'Visit Log', () => Navigator.push(context, MaterialPageRoute(builder: (_) => VisitLogScreen(token: widget.token, baseUrl: widget.baseUrl, storeName: '')))),
+                    _buildMenuIcon(Icons.edit_calendar, 'Cuti / Izin', () => Navigator.push(context, MaterialPageRoute(builder: (_) => LeaveRequestScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                    _buildMenuIcon(Icons.add_location_alt, 'Tambah Lokasi', () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddStoreScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                    _buildMenuIcon(Icons.more_time, 'Lembur', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExtraHourScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                    _buildMenuIcon(Icons.post_add, 'Pengajuan BAP', () => Navigator.push(context, MaterialPageRoute(builder: (_) => BapScreen(token: widget.token, baseUrl: widget.baseUrl)))),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Konten Bawah Grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('Informasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const SizedBox(height: 12),
+                  
+                  // Kotak Absen
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                      ],
+                    ),
+                    child: Column(
                       children: [
-                        Icon(
-                          isInRadius ? Icons.location_on : Icons.location_off,
-                          color: isInRadius ? Colors.green : Colors.redAccent,
-                          size: 30,
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        // Detail Lokasi (Mocked like image)
+                        Row(
                           children: [
-                            const Text(
-                              'Jarak ke Kantor',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _currentDistance != null
-                                  ? '${_currentDistance!.toStringAsFixed(1)} Meter'
-                                  : 'Mencari sinyal...',
-                              style: TextStyle(
-                                color: isInRadius
-                                    ? Colors.green
-                                    : Colors.redAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                            const Icon(Icons.store, color: Color(0xFF2E3190)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _todaySchedule?.shiftName ?? 'Area Absensi / Kantor',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                  ),
+                                  Text(
+                                    _currentDistance != null ? '${_currentDistance!.toStringAsFixed(1)} Meter - $_statusMessage' : 'Mencari sinyal...',
+                                    style: TextStyle(fontSize: 12, color: isInRadius ? Colors.green : Colors.red),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
+                        const Divider(height: 24),
+                        // Detail Durasi
+                        if (_isCheckedIn && !_isCheckedOut)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.access_time, size: 16, color: Colors.green),
+                                  const SizedBox(width: 4),
+                                  Text('CHECK IN: ${_checkInTime?.hour.toString().padLeft(2,'0')}:${_checkInTime?.minute.toString().padLeft(2,'0')} WIB', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                ],
+                              ),
+                              Text('Duration : ${_formattedDuration}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                            ],
+                          ),
+                        if (_isCheckedIn && !_isCheckedOut) const SizedBox(height: 16),
+                        
+                        // Slider / Action area
+                        if (_isCheckedOut)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Text('Sesi Kerja Hari Ini Selesai', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                            ),
+                          )
+                        else if (!_isCheckedIn)
+                          _buildSlider(label: 'GESER UNTUK CHECK IN', color: const Color(0xFF2E3190), onAction: _processAttendance)
+                        else if (_isCheckedIn && !_isVisiting)
+                          Column(
+                            children: [
+                              _buildSlider(label: 'Checkout >>', color: const Color(0xFF2E3190), onAction: _processAttendance),
+                              const SizedBox(height: 16),
+                              // Visit Mode
+                              if (_todaySchedule != null && _todaySchedule!.stores.isNotEmpty)
+                                DropdownButtonFormField<String>(
+                                  value: _todaySchedule!.stores.contains(_locationController.text)
+                                      ? _locationController.text
+                                      : null,
+                                  items: _todaySchedule!.stores.map((String store) {
+                                    return DropdownMenuItem<String>(
+                                      value: store,
+                                      child: Text(store, overflow: TextOverflow.ellipsis),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _locationController.text = newValue;
+                                      });
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Pilih Toko / Lokasi Visit',
+                                    labelStyle: const TextStyle(color: Colors.grey),
+                                    prefixIcon: const Icon(Icons.store, color: Colors.grey),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                                  ),
+                                )
+                              else
+                                TextField(
+                                  controller: _locationController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Nama Toko / Lokasi Visit',
+                                    labelStyle: const TextStyle(color: Colors.grey),
+                                    prefixIcon: const Icon(Icons.store, color: Colors.grey),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                                  ),
+                                ),
+                              const SizedBox(height: 12),
+                              _buildSlider(label: 'VISIT IN >>', color: const Color(0xFF3F51B5), onAction: _processVisitIn),
+                            ],
+                          )
+                        else if (_isVisiting)
+                          Column(
+                            children: [
+                              Text('Sedang Visit di: ${_locationController.text}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VisitLogScreen(
+                                        token: widget.token,
+                                        baseUrl: widget.baseUrl,
+                                        storeName: _locationController.text,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.edit_document, color: Color(0xFF2E3190)),
+                                label: const Text('Isi Laporan Visit (Visit Log)', style: TextStyle(color: Color(0xFF2E3190), fontWeight: FontWeight.bold)),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFF2E3190)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildSlider(label: 'VISIT OUT >>', color: Colors.orangeAccent, onAction: _processVisitOut),
+                            ],
+                          ),
                       ],
                     ),
-                    IconButton(
-                      icon: _isFetchingLocation
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.amber,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.my_location, color: Colors.amber),
-                      onPressed: _isFetchingLocation ? null : _refreshLocation,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // PESAN STATUS
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[800]!),
-                ),
-                child: Text(
-                  _statusMessage,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.amber, fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // DURASI KERJA
-              if (_isCheckedIn && !_isCheckedOut) ...[
-                Center(
-                  child: Text(
-                    'WAKTU BEKERJA',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      color: Colors.green,
-                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: Text(
-                    _formattedDuration,
-                    style: const TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: 2.0,
+                  
+                  const SizedBox(height: 24),
+                  // Riwayat Geofence
+                  const Text('Riwayat Geofence (Hari Ini)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
                       color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                             _isCheckedIn && _checkInTime != null
+                                ? '${_checkInTime!.day} ${_checkInTime!.month} ${_checkInTime!.hour.toString().padLeft(2,'0')}:${_checkInTime!.minute.toString().padLeft(2,'0')} — Masuk area kantor'
+                                : 'Belum ada riwayat check-in hari ini',
+                             style: const TextStyle(color: Colors.green, fontSize: 14),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-              ],
-
-              // -------------------------------------------------------------
-              // LOGIKA STATE MACHINE UNTUK ALUR ABSENSI
-              // -------------------------------------------------------------
-              if (_isCheckedOut)
-                // FASE 4: SELESAI
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green),
-                  ),
-                  child: const Column(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: Colors.green,
-                        size: 48,
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Sesi Kerja Hari Ini Selesai',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Terima kasih atas kerja keras Anda!',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                )
-              else if (!_isCheckedIn)
-                // FASE 1: BELUM CHECK-IN PAGI
-                _buildSlider(
-                  label: 'GESER UNTUK CHECK IN',
-                  color: Colors.amber,
-                  onAction: _processAttendance,
-                )
-              else if (_isCheckedIn && !_isVisiting)
-                // FASE 2: SUDAH CHECK IN, STANDBY UNTUK VISIT ATAU PULANG
-                Column(
-                  children: [
-                    TextField(
-                      controller: _locationController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Nama Toko / Lokasi Visit',
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        prefixIcon: const Icon(
-                          Icons.store,
-                          color: Colors.amber,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey[800]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.amber),
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFF1E1E1E),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildSlider(
-                      label: 'GESER UNTUK VISIT IN',
-                      color: Colors.blueAccent,
-                      onAction: _processVisitIn,
-                    ),
-                    const SizedBox(height: 20),
-                    const Divider(color: Colors.grey),
-                    const SizedBox(height: 20),
-                    _buildSlider(
-                      label: 'AKHIRI SESI & CHECK OUT',
-                      color: Colors.redAccent,
-                      onAction: _processAttendance,
-                    ),
-                  ],
-                )
-              else if (_isVisiting)
-                // FASE 3: SEDANG VISIT DI TOKO
-                Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blueAccent),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.storefront,
-                            color: Colors.blueAccent,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Sedang Visit di:',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  _locationController.text,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // --- TOMBOL BARU: ISI VISIT LOG ---
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton.icon(
-                        icon: const Icon(
-                          Icons.edit_document,
-                          color: Colors.amber,
-                        ),
-                        label: const Text(
-                          'Isi Laporan Visit (Visit Log)',
-                          style: TextStyle(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.amber),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VisitLogScreen(
-                                token: widget.token,
-                                baseUrl: widget.baseUrl,
-                                storeName: _locationController
-                                    .text, // Otomatis mengirim nama toko
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // ----------------------------------
-                    _buildSlider(
-                      label: 'GESER UNTUK VISIT OUT',
-                      color: Colors.orangeAccent,
-                      onAction: _processVisitOut,
-                    ),
-                  ],
-                ),
-            ],
-          ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildMenuIcon(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE2E8F0), // Soft grey background
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.grey, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMap() {
+    if (_currentPosition == null) {
+      return const SizedBox(
+        height: 150,
+        child: Center(child: Text('Menunggu lokasi...')),
+      );
+    }
+    return Container(
+      height: 150,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+            initialZoom: 16.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.esagroup_absensi_app',
+            ),
+            CircleLayer(
+              circles: [
+                CircleMarker(
+                  point: LatLng(widget.officeLat, widget.officeLon),
+                  color: Colors.blue.withValues(alpha: 0.3),
+                  borderColor: Colors.blue,
+                  borderStrokeWidth: 2,
+                  useRadiusInMeter: true,
+                  radius: widget.maxRadius,
+                ),
+              ],
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+                  width: 40,
+                  height: 40,
+                  child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                ),
+                Marker(
+                  point: LatLng(widget.officeLat, widget.officeLon),
+                  width: 40,
+                  height: 40,
+                  child: const Icon(Icons.business, color: Color(0xFF2E3190), size: 40),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _showMapConfirmationDialog() async {
+    if (_currentPosition == null) return true; // If no pos yet, just bypass or handle error. Usually not null here.
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Konfirmasi Lokasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: Column(
+              children: [
+                Expanded(child: _buildMap()),
+                const SizedBox(height: 12),
+                const Text(
+                  'Pastikan lokasi Anda (merah) sudah benar dan akurat.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E3190),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Lanjut Buka Kamera', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+
+  Future<bool> _detectFace(String imagePath) async {
+    final options = FaceDetectorOptions();
+    final faceDetector = FaceDetector(options: options);
+    final inputImage = InputImage.fromFilePath(imagePath);
+
+    try {
+      final List<Face> faces = await faceDetector.processImage(inputImage);
+      return faces.isNotEmpty;
+    } catch (e) {
+      return false;
+    } finally {
+      faceDetector.close();
+    }
   }
 }
